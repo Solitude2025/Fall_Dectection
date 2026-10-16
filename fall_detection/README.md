@@ -167,8 +167,6 @@ python eval_longtail.py --checkpoint checkpoints/best.pth
 python export.py --checkpoint checkpoints/best.pth --format onnx
 ```
 
-华为 Ascend 部署还需要对应 CANN/ATC 工具链，并根据目标芯片重新校验输入尺寸、算子支持和量化结果。
-
 ## 参考结果
 
 以下结果来自当前版本内部评测，不代表所有视频或真实养老场景的保证：
@@ -187,11 +185,6 @@ python export.py --checkpoint checkpoints/best.pth --format onnx
 
 ## 已知限制
 
-- 开头已经处于躺卧状态、人体很小、快速遮挡或镜头剧烈移动时可能漏检。
-- 深蹲、弯腰、快速坐下、主动躺下等动作可能与跌倒相似，仍可能误报。
-- 模拟红外风格的事件级效果有限，真实红外摄像头需要重新标定和评估。
-- 当前网页应用面向单机单摄像头，没有用户登录、多设备管理和生产级权限控制。
-- YOLO11m-Pose 上传视频配置约 2,091 万参数，超过原比赛 2,000 万参数限制；参赛时应改用符合约束的模型并重新验证。
 - 该系统不能保证检测到所有跌倒，也不能单独作为紧急救援依据。
 
 ## 隐私与安全
