@@ -16,7 +16,7 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:fall_detection}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${MYSQL_USER:fall_user}
-    password: ${MYSQL_PASSWORD:fall_password}
+    password: ${MYSQL_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: update

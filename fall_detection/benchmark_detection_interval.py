@@ -10,14 +10,10 @@ from pathlib import Path
 from services.inference_service import InferenceService
 
 
-VIDEOS = [
-    Path(r"D:\Studywww\projects\huawei\测试视频\Desktop 2026.10.15 - 14.25.43.08.mp4"),
-    Path(r"D:\Studywww\projects\huawei\测试视频\Desktop 2026.10.15 - 14.28.46.09.mp4"),
-    Path(r"D:\Studywww\projects\huawei\测试视频\Desktop 2026.10.15 - 18.58.26.10.mp4"),
-    Path(r"D:\Studywww\projects\huawei\测试视频\Desktop 2026.10.15 - 18.58.49.11.mp4"),
-    Path(r"D:\Studywww\projects\huawei\测试视频\Desktop 2026.10.15 - 20.54.05.17.mp4"),
-    Path(r"D:\Studywww\projects\huawei\测试视频\test_016_fallen_to_150.mp4"),
-]
+# Put videos you are allowed to process in the local ``test/`` directory.
+# The directory is intentionally ignored by Git because recordings may contain
+# personal data and are usually too large for a source repository.
+VIDEOS = sorted(Path(__file__).resolve().parent.joinpath("test").glob("*.mp4"))
 
 
 def run(pipeline, video: Path, interval: int) -> dict:

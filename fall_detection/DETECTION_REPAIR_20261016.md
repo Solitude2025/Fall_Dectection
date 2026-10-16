@@ -25,7 +25,7 @@
 ## 回归方式与证据
 
 - `scripts/regress_video_jobs.py` 直接运行与网页相同的 `VideoAnalysisJobs._run`，真实解码、检测、跟踪、分类、报警、编码，逐个生成报告及回放。未用历史检测缓存。
-- 正样本目录：`D:/Studywww/projects/huawei/测试视频`，22 个视频。回归产物 `app_data/regression_final_positive/summary.json`，逐视频 `jobs/<job_id>/report.json`、`result.mp4`。
+- 正样本目录：本机授权的测试视频目录（默认可放在项目根目录的 `test/`，该目录被 Git 忽略），22 个视频。回归产物保存在本机 `app_data/` 下，不应提交到公开仓库。
 - 负样本：`test_neg`，23 个行走及 2 个全程躺卧，共25个。回归产物 `app_data/regression_final_negative/summary.json`。
 - 标签只参与结果核对，不进入推理。`manifest.json` 保存模型、配置哈希及运行库版本。
 - 每个正样本抽取报警前约 .65 秒、.25 秒和触发时刻，核对人体、骨架和倒地过程，图片保存在 `app_data/verification`。不是人工逐帧完整观看全视频。
@@ -39,7 +39,7 @@
 
 `20.54.05.17.mp4` 包含同一动作的两个摄像机视角。系统按画面中不同人物轨迹分别记录，可能有两条事件，不能直接解释为两次独立事故。
 
-复现：在项目目录运行 `python scripts/regress_video_jobs.py --source "D:/Studywww/projects/huawei/测试视频" --output app_data/recheck_positive`；负样本使用 `--source test_neg --negative --output app_data/recheck_negative`。脚本在空测试集或标签判断不符时返回失败退出码。
+复现：在项目目录运行 `python scripts/regress_video_jobs.py --source test --output app_data/recheck_positive`；负样本使用 `--source test_neg --negative --output app_data/recheck_negative`。请仅使用你有权处理的本地素材；脚本在空测试集或标签判断不符时返回失败退出码。
 
 ## 本轮最终结果
 

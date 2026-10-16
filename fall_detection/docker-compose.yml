@@ -4,16 +4,16 @@ services:
     container_name: fall-detection-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: fall_detection
-      MYSQL_USER: fall_user
-      MYSQL_PASSWORD: fall_password
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fall_detection}
+      MYSQL_USER: ${MYSQL_USER:-fall_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env or the shell}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env or the shell}
     ports:
       - "3306:3306"
     volumes:
       - fall_detection_mysql:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$${MYSQL_ROOT_PASSWORD}\""]
       interval: 5s
       timeout: 3s
       retries: 20

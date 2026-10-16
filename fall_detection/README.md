@@ -2,6 +2,17 @@
 
 > **华为专项赛道：面向低算力端侧平台基于视觉的实时跌倒检测**
 
+这是一个可在本机体验的跌倒检测研究/演示项目，包含 Python 推理服务、浏览器监控台和可选的 Spring Boot 事件服务。项目输出仅供研究、演示和辅助复核使用，不能替代人工看护、医疗判断或安全关键系统。
+
+## 公开仓库说明
+
+- 仓库不包含 OmniFall 或其他原始视频数据，也不包含摄像头录像；请从数据集官方渠道获取并遵守其许可证、隐私和再分发要求。
+- 仓库不包含 Ultralytics 的 YOLO 姿态权重。首次运行时，Ultralytics 会按模型名下载 `yolov8n-pose.pt`（摄像头）或 `yolo11m-pose.pt`（上传视频）；请在商业使用或再分发前阅读对应条款。
+- `checkpoints/best.pth` 是本项目的时序分类权重，可直接用于演示；若仓库镜像或 GitHub 限制导致它未能下载，请按下文训练步骤重新生成。
+- 数据库密码、摄像头录像、日志和任务结果必须保存在本机。生产环境请通过环境变量设置密码，不要把真实 `.env` 文件提交到 Git。
+
+详细的第三方组件和数据说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，环境变量模板见 [.env.example](.env.example)。
+
 ---
 
 ## 方案概述
@@ -134,7 +145,19 @@ pip install -r requirements.txt
 # 国内加速：pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 ```
 
-### 2. 数据准备（OmniFall）
+Python 3.10 或 3.11、JDK 17 和 Maven 3.9+ 是推荐环境。仅运行 Python 推理不需要 Java、MySQL 或 Docker；要体验完整网页应用，再安装后端依赖并按 [APP_GUIDE.md](APP_GUIDE.md) 启动。
+
+### 2. 直接运行一个本地视频
+
+将你有权处理的视频放入本地 `test/`（该目录默认被 Git 忽略），并运行：
+
+```bash
+python infer.py --video path/to/your_video.mp4 --checkpoint checkpoints/best.pth
+```
+
+首次运行会自动下载所需的 YOLO pose 权重。没有 NVIDIA GPU 时，把配置中的 `video_device` / `camera_device` 设为 `cpu`，或让代码自动回退到 CPU。
+
+### 3. 数据准备（OmniFall）
 
 ```bash
 # 完整流程：下载 -> 提取关键点 -> 80/10/10 分流
@@ -148,7 +171,7 @@ python prepare_data.py --extract --max_videos 2000   # 只提取关键点
 python prepare_data.py --split                 # 只分流
 ```
 
-### 3. 训练
+### 4. 训练
 
 ```bash
 python train.py --data_dir data/train --val_dir data/val --epochs 50 --batch_size 32 --device cpu
@@ -160,7 +183,7 @@ python tune_threshold.py --checkpoint checkpoints/best.pth
 python evaluate.py --checkpoint checkpoints/best.pth
 ```
 
-### 4. 推理测试
+### 5. 推理测试
 
 ```bash
 # test/ 目录批量推理（保存标注视频 + 事件 JSON 到 outputs/）
@@ -177,7 +200,7 @@ python infer.py --test --no_lowlight --checkpoint checkpoints/best.pth
 python infer.py --webcam --checkpoint checkpoints/best.pth
 ```
 
-### 5. 长尾场景评测
+### 6. 长尾场景评测
 
 ```bash
 # 对 test/ 视频生成微光/红外/遮挡变体并逐场景对比
@@ -185,7 +208,7 @@ python eval_longtail.py --checkpoint checkpoints/best.pth
 # 结果：eval_report/longtail/longtail_summary.{md,json}
 ```
 
-### 6. NPU 部署导出
+### 7. NPU 部署导出
 
 ```bash
 python export.py --checkpoint checkpoints/best.pth --format onnx
