@@ -1,0 +1,26 @@
+[
+  {
+    "width": 1280,
+    "height": 720,
+    "backend": "DSHOW",
+    "exposure": -4.0,
+    "capture_fps": 15.98,
+    "brightness": 28.81
+  },
+  {
+    "width": 1280,
+    "height": 720,
+    "backend": "DSHOW",
+    "exposure": -5.0,
+    "capture_fps": 30.03,
+    "brightness": 21.92
+  },
+  {
+    "width": 640,
+    "height": 480,
+    "backend": "DSHOW",
+    "exposure": -5.0,
+    "capture_fps": 30.03,
+    "brightness": 23.56
+  }
+]

@@ -232,6 +232,11 @@ class RuleRefinementOnline:
         self._fall_start_frame = -1
         self._alarm_cooldown = 0
         self._frame_idx = 0
+        # ``_alarm_cooldown`` intentionally keeps the legacy model alarm
+        # visible after a confirmed fall.  The application layer needs the
+        # instantaneous candidate separately so it can enforce its own 0.5 s
+        # continuous-signal trigger.
+        self._candidate_active = False
     
     def reset(self):
         """重置所有状态"""
@@ -244,6 +249,7 @@ class RuleRefinementOnline:
         self._fall_start_frame = -1
         self._alarm_cooldown = 0
         self._frame_idx = 0
+        self._candidate_active = False
     
     def update(
         self,
@@ -280,6 +286,7 @@ class RuleRefinementOnline:
         
         # 如果 TCN 概率很低，直接返回
         if tcn_prob < cfg.tcn_prob_threshold:
+            self._candidate_active = False
             # 检查警报冷却
             if self._alarm_cooldown > 0:
                 self._alarm_cooldown -= 1
@@ -338,6 +345,7 @@ class RuleRefinementOnline:
             and vote_ratio > cfg.vote_threshold
             and rules_passed >= cfg.rules_min_pass
         )
+        self._candidate_active = bool(is_fall)
         
         if is_fall:
             if not self._fall_active:
@@ -351,6 +359,11 @@ class RuleRefinementOnline:
             return refined, True
         
         return refined, False
+
+    def is_candidate_active(self) -> bool:
+        """Return the current frame's fall candidate before memory hold."""
+
+        return self._candidate_active
     
     def _check_recovery(self) -> bool:
         """检查是否从跌倒中恢复"""

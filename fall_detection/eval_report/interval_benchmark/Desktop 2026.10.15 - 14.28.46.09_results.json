@@ -1,0 +1,552 @@
+{
+  "video": "D:\\Studywww\\projects\\huawei\\测试视频\\Desktop 2026.10.15 - 14.28.46.09.mp4",
+  "total_frames": 374,
+  "total_time": 58.354849338531494,
+  "fps": 6.409064614841687,
+  "avg_latency_ms": 156.0290089265548,
+  "fall_events": [
+    {
+      "event_id": "evt_20261015T170757224600Z_d9c66894",
+      "camera_id": "laptop_camera",
+      "person_id": 0,
+      "event_type": "fall_suspected",
+      "confidence": 0.561371,
+      "start_time": "2026-10-15T17:07:53.803914Z",
+      "alarm_level": "high",
+      "status": "active",
+      "start_frame": 289,
+      "trigger_frame": 318,
+      "end_frame": 373,
+      "duration_frames": 85,
+      "duration_seconds": 1.417,
+      "cleared_at": null,
+      "clear_reason": null,
+      "expires_at": "2026-10-15T17:08:27.224600Z",
+      "created_at": "2026-10-15T17:07:57.224600Z",
+      "timestamp": 4.817,
+      "max_probability": 0.561371
+    }
+  ],
+  "frame_alarms": [
+    {
+      "frame": 318,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.41949740052223206
+      },
+      "event_updates": [
+        {
+          "event_id": "evt_20261015T170757224600Z_d9c66894",
+          "camera_id": "laptop_camera",
+          "person_id": 0,
+          "event_type": "fall_suspected",
+          "confidence": 0.419497,
+          "start_time": "2026-10-15T17:07:53.803914Z",
+          "alarm_level": "high",
+          "status": "active",
+          "start_frame": 289,
+          "trigger_frame": 318,
+          "end_frame": 318,
+          "duration_frames": 30,
+          "duration_seconds": 0.5,
+          "cleared_at": null,
+          "clear_reason": null,
+          "expires_at": "2026-10-15T17:08:27.224600Z",
+          "created_at": "2026-10-15T17:07:57.224600Z",
+          "timestamp": 4.817,
+          "max_probability": 0.419497
+        }
+      ]
+    },
+    {
+      "frame": 319,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.44120660424232483
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 320,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.44917669892311096
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 321,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.464763879776001
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 322,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.47359612584114075
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 323,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.4851320683956146
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 324,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.4816109836101532
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 325,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.48963865637779236
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 326,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.495005339384079
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 327,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5100753903388977
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 328,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5145005583763123
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 329,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5232656598091125
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 330,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5150108337402344
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 331,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5274304151535034
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 332,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5303708910942078
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 333,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5437567830085754
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 334,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5478086471557617
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 335,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5505529046058655
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 336,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5577052235603333
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 337,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5575750470161438
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 338,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5613713264465332
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 339,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5434388518333435
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 340,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5386509895324707
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 341,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5356670022010803
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 342,
+      "alarms": {
+        "0": true
+      },
+      "probs": {
+        "0": 0.5507659316062927
+      },
+      "event_updates": []
+    },
+    {
+      "frame": 343,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 344,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 345,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 346,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 347,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 348,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 349,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 350,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 351,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 352,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 353,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 354,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 355,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 356,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 357,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 358,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 359,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 360,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 361,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 362,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 363,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 364,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 365,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 366,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 367,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 368,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 369,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 370,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 371,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 372,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    },
+    {
+      "frame": 373,
+      "alarms": {
+        "0": true
+      },
+      "probs": {},
+      "event_updates": []
+    }
+  ]
+}

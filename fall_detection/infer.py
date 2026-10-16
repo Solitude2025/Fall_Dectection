@@ -201,6 +201,10 @@ def main():
         save_video=True,              # 始终保存视频
         output_dir=args.output,
         rule_config=rule_config,
+        camera_id=config.get("pipeline", {}).get("camera_id", "laptop_camera"),
+        alarm_trigger_seconds=config.get("pipeline", {}).get("alarm_trigger_seconds", 0.5),
+        alarm_hold_seconds=config.get("pipeline", {}).get("alarm_hold_seconds", 30.0),
+        alarm_cooldown_frames=config.get("pipeline", {}).get("alarm_cooldown_frames", 30),
     )
 
     stats = pipeline.get_statistics()

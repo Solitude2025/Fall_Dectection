@@ -1,0 +1,28 @@
+[
+  {
+    "opencv_threads": 1,
+    "torch_threads": 24,
+    "mean_ms": {
+      "enhance": 1.2,
+      "inference": 26.72,
+      "draw": 3.24,
+      "jpeg": 2.13
+    },
+    "total_mean_ms": 33.29,
+    "total_p95_ms": 40.78,
+    "processing_fps": 30.04
+  },
+  {
+    "opencv_threads": 2,
+    "torch_threads": 2,
+    "mean_ms": {
+      "enhance": 0.89,
+      "inference": 26.9,
+      "draw": 3.25,
+      "jpeg": 2.07
+    },
+    "total_mean_ms": 33.1,
+    "total_p95_ms": 45.5,
+    "processing_fps": 30.21
+  }
+]

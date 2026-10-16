@@ -4,7 +4,7 @@ torchvision>=0.15.0
 numpy>=1.21.0
 
 # YOLO Pose 检测
-ultralytics>=8.0.0
+ultralytics>=8.3.0
 opencv-python>=4.5.0
 
 # 数据处理
@@ -27,3 +27,7 @@ onnxruntime>=1.12.0
 
 # 模型分析（可选）
 # thop>=0.1.0
+
+# 应用服务（摄像头 → Spring Boot）
+fastapi>=0.110.0
+uvicorn>=0.27.0

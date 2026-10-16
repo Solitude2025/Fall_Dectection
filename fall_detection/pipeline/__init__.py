@@ -6,6 +6,7 @@ from .inference import (
     FrameResult,
     PipelineResult,
 )
+from .alarm_state import AlarmEventRecord, AlarmStateManager
 
 __all__ = [
     "YOLOPoseDetector",
@@ -17,4 +18,6 @@ __all__ = [
     "FallEvent",
     "FrameResult",
     "PipelineResult",
+    "AlarmEventRecord",
+    "AlarmStateManager",
 ]

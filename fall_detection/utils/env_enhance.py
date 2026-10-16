@@ -32,14 +32,27 @@ def apply_lowlight(frame: np.ndarray, gamma: float = 2.5) -> np.ndarray:
 #  2. 红外模拟
 # ═══════════════════════════════════════════════
 def apply_infrared(frame: np.ndarray) -> np.ndarray:
-    """灰度 + CLAHE + 噪声 → 模拟近红外摄像头"""
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    enhanced = clahe.apply(gray)
-    # 加少量高斯噪声
-    noise = np.random.normal(0, 6, enhanced.shape).astype(np.int16)
-    enhanced = np.clip(enhanced.astype(np.int16) + noise, 0, 255).astype(np.uint8)
-    return cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+    """RGB → 灰度 → CLAHE → Gamma → 噪声 → 模糊 → 伪红外 (黑白高对比，人体偏亮背景偏暗)"""
+    # ① 灰度化
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.float32)
+
+    # ② CLAHE 增强暗处对比度（先转回 uint8）
+    gray_u8 = gray.astype(np.uint8)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray_u8 = clahe.apply(gray_u8)
+    gray = gray_u8.astype(np.float32)
+
+    # ③ Gamma 提亮（模拟红外曝光，人体偏亮）
+    gray = np.power(gray / 255.0, 0.6) * 255.0
+
+    # ④ 加高斯噪声（模拟红外雪花）
+    noise = np.random.normal(0, 8, gray.shape).astype(np.float32)
+    gray = np.clip(gray + noise, 0, 255)
+
+    # ⑤ 轻微模糊（模拟红外低分辨率）
+    gray = cv2.GaussianBlur(gray, (3, 3), 1.0)
+
+    return cv2.cvtColor(gray.astype(np.uint8), cv2.COLOR_GRAY2BGR)
 
 
 # ═══════════════════════════════════════════════

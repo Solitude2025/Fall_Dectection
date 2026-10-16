@@ -58,6 +58,7 @@ class ByteTrackWrapper:
         track_buffer: int = 30,             # 丢失后保留帧数
         frame_rate: int = 30,               # 帧率
         max_age: int = 60,                  # 最大跟踪寿命
+        pose_association: bool = False,
     ):
         self.track_thresh = track_thresh
         self.match_thresh = match_thresh
@@ -65,6 +66,7 @@ class ByteTrackWrapper:
         self.track_buffer = track_buffer
         self.frame_rate = frame_rate
         self.max_age = max_age
+        self.pose_association = pose_association
         
         # 内部状态
         self._next_id = 0
@@ -81,6 +83,7 @@ class ByteTrackWrapper:
         self,
         detections: List[PersonDetection],
         detection_skip: int = 1,
+        is_detection_frame: Optional[bool] = None,
     ) -> Dict[int, PersonDetection]:
         """
         更新跟踪状态
@@ -92,10 +95,12 @@ class ByteTrackWrapper:
         Returns:
             Dict[track_id, PersonDetection]: 当前帧的跟踪结果
         """
+        # The caller knows whether YOLO actually ran. An empty result from
+        # YOLO means "missed", not an intentionally skipped observation.
+        if is_detection_frame is None:
+            is_detection_frame = self._frame_count % max(1, detection_skip) == 0
         self._frame_count += 1
-        
-        # 如果隔帧检测且当前帧没有新检测
-        if detection_skip > 1 and self._frame_count % detection_skip != 0 and len(detections) == 0:
+        if not is_detection_frame:
             return self._predict_only()
         
         # 分离高低分框
@@ -172,7 +177,7 @@ class ByteTrackWrapper:
         return {
             tid: t.detection
             for tid, t in self._tracks.items()
-            if t.lost_count < self.track_buffer
+            if t.lost_count == 0
         }
     
     def _get_active_tracks(self) -> List['TrackedPerson']:
@@ -208,6 +213,19 @@ class ByteTrackWrapper:
                 iou_matrix[i, j] = self._compute_iou(
                     det.bbox, trk.detection.bbox
                 )
+                # A falling person's box can shrink/rotate abruptly while
+                # shoulders and hips still describe the same nearby person.
+                # Use agreement of several visible joints only as a fallback
+                # for an otherwise unmatched pair, never a stale observation.
+                if self.pose_association and iou_matrix[i, j] < iou_threshold:
+                    before = trk.detection.keypoints
+                    after = det.keypoints
+                    valid = (before[5:, 2] > .3) & (after[5:, 2] > .3)
+                    if valid.sum() >= 6:
+                        scale = np.linalg.norm(trk.detection.bbox[2:] - trk.detection.bbox[:2])
+                        distances = np.linalg.norm(before[5:, :2][valid] - after[5:, :2][valid], axis=1)
+                        if scale > 0 and np.median(distances) / scale < .25:
+                            iou_matrix[i, j] = max(iou_matrix[i, j], iou_threshold + 1e-6)
         
         # 贪婪匹配（简化版匈牙利算法）
         matched = []
@@ -250,7 +268,24 @@ class ByteTrackWrapper:
         return {
             tid: t.detection
             for tid, t in self._tracks.items()
-            if t.lost_count < self.track_buffer
+            # Lost tracks remain available for association, but their old
+            # skeleton is not a new observation for the temporal model.
+            if t.lost_count == 0
+        }
+
+    def get_visual_tracks(self, max_lost: int = 2) -> Dict[int, PersonDetection]:
+        """Return recent tracks for drawing on every video frame.
+
+        A detector may intentionally run every Nth frame, and an occasional
+        detector miss should not make the overlay blink.  This method is only
+        for visualization: the temporal fall logic continues to use
+        ``_get_current_tracks`` and therefore does not treat stale poses as
+        new observations.
+        """
+        return {
+            tid: track.detection
+            for tid, track in self._tracks.items()
+            if track.lost_count <= max(0, max_lost)
         }
     
     def _cleanup(self):

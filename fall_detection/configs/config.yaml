@@ -57,10 +57,44 @@ tracker:
 
 # --- 推理管线配置 ---
 pipeline:
+  model_version: "large"   # application checkpoint architecture
   sequence_length: 32
   detection_interval: 2      # YOLO 检测间隔（隔N帧）
+  video_detection_interval: 1 # 上传视频逐帧检测，避免跌倒阶段被隔帧漏掉
+  video_model: "yolo11m-pose.pt"  # 上传视频采用更强姿态模型；摄像头仍用 n 版
+  video_input_size: [1280, 736]
+  video_device: "cuda"       # 无 CUDA 时自动回退 CPU
+  video_cpu_threads: 2
+  camera_detection_interval: 1  # 实时模式逐帧检测，保证每帧都有新框和骨架
+  camera_input_size: [512, 288]  # 摄像头预览使用较小输入，上传视频仍用上面的尺寸
+  camera_device: "cuda"     # 有 NVIDIA GPU 时摄像头使用 CUDA；无 GPU 自动回退 CPU
+  camera_width: 1280
+  camera_height: 720
+  camera_fps: 30
+  # 720p30 要在设置分辨率之后请求 MJPEG，否则驱动可能回到 720p8 YUY2。
+  # 优先保证真实曝光：固定 -5 在室内严重欠曝，软件提亮会形成灰雾。
+  # 自动曝光在暗处可能降低实际 FPS，以状态中的实测值为准。
+  camera_backend: "dshow"
+  camera_auto_exposure: 0.75
+  camera_exposure: null       # 仅显式手动模式下才写入曝光值
+  camera_preview_brightness: 100
+  camera_jpeg_quality: 90
+  camera_cpu_threads: 2
   ir_mode: false             # 红外模式
-  alarm_cooldown_frames: 30
+  pose_recovery: true        # 上传视频启用局部放大、旋转及有界高分辨率重识别
+  camera_pose_recovery: false  # 摄像头只做快速主检测，避免每帧额外局部推理
+  camera_transition_max_gap_seconds: 1.5  # 实时推理较慢时，允许同一轨迹短暂丢检后继续比较真实姿态
+  camera_preserve_short_gaps_seconds: 1.2 # 按真实时间限定历史保留；丢失与残缺骨架统一超时，不填充伪造帧
+  camera_model_support_grace_seconds: 1.2 # 真实跌倒过渡后，容忍实时TCN短暂降分
+  transition_max_gap_seconds: 0.6         # 上传视频使用严格连续观测
+  require_observed_transition: true  # 真实姿态变化 + 持续低位 + TCN支持，排除开头已躺卧
+  video_min_kp_completeness: 0.35   # 离线视频允许跌倒阶段的部分骨架进入时序分析
+  camera_min_kp_completeness: 0.5   # 实时摄像头保持较严格的骨架质量门控
+  # 应用层报警策略：连续疑似跌倒 0.5 秒后触发，人工确认或 30 秒后解除
+  camera_id: "laptop_camera"
+  alarm_trigger_seconds: 0.5
+  alarm_hold_seconds: 30.0
+  alarm_cooldown_frames: 30  # 兼容旧脚本，不再作为报警保持时间
   save_video: false
   output_dir: "output"
 

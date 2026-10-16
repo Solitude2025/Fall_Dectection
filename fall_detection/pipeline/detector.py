@@ -122,13 +122,13 @@ class YOLOPoseDetector:
                 "YOLOv8n-pose 模型将自动下载: yolo pose download model=yolov8n-pose.pt"
             )
         except Exception as e:
-            print(f"[YOLOPoseDetector] 模型加载失败: {e}")
-            print("[YOLOPoseDetector] 将使用模拟模式（假关键点）")
+            raise RuntimeError(f"人体检测模型加载失败: {e}") from e
     
     def detect(
         self,
         image: np.ndarray,
         original_shape: Optional[Tuple[int, int]] = None,
+        input_size: Optional[Tuple[int, int]] = None,
     ) -> List[PersonDetection]:
         """
         检测图像中的人体
@@ -146,12 +146,18 @@ class YOLOPoseDetector:
         h_orig, w_orig = original_shape or image.shape[:2]
         
         try:
+            inference_size = input_size or self.input_size
             results = self._model(
                 image,
                 conf=self.conf_threshold,
                 iou=self.iou_threshold,
-                imgsz=self.input_size,
+                imgsz=(inference_size[1], inference_size[0]),  # Ultralytics: (height, width)
                 max_det=self.max_det,
+                # ``device`` used to be stored but never forwarded, which
+                # silently forced the live camera onto CPU even on machines
+                # with a CUDA GPU.  Keep the choice explicit and let
+                # Ultralytics select the requested accelerator.
+                device=self.device,
                 verbose=False,
             )
             
@@ -200,8 +206,7 @@ class YOLOPoseDetector:
             return detections[:self.max_det]
         
         except Exception as e:
-            print(f"[YOLOPoseDetector] 检测异常: {e}")
-            return []
+            raise RuntimeError(f"人体检测失败: {e}") from e
     
     def detect_batch(
         self,
@@ -317,6 +322,16 @@ class YOLOPoseDetectorSim:
         print("[YOLOPoseDetectorSim] 使用模拟模式，生成假关键点数据")
         self.conf_threshold = kwargs.get("conf_threshold", 0.25)
         self.max_det = kwargs.get("max_det", 5)
+
+    def preprocess_for_lowlight(self, frame: np.ndarray) -> np.ndarray:
+        """Keep the fallback detector API-compatible with the real detector."""
+
+        return frame
+
+    def preprocess_for_ir(self, frame: np.ndarray) -> np.ndarray:
+        """Keep the fallback detector API-compatible with the real detector."""
+
+        return frame
     
     def detect(
         self,

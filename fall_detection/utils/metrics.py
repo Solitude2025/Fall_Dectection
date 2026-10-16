@@ -219,24 +219,11 @@ def compute_model_efficiency(
     # 模型大小 (MB, FP32)
     model_size_mb = total_params * 4 / (1024 * 1024)
     
-    # 计算 FLOPs (需要 fvcore/thop)
-    # 注意: input_shape 对应 TCN 输入，应 profile model.tcn 而非整个 FallDetector
-    # （FallDetector.forward 需要 keypoints+bboxes 两个输入）
-    try:
-        from thop import profile
-        target = getattr(model, "tcn", model)
-        dummy = torch.randn(*input_shape)
-        flops, _ = profile(target, inputs=(dummy,), verbose=False)
-        flops_m = flops / 1e6
-    except:
-        flops_m = 0
-    finally:
-        # 清理 thop 注入的 total_ops/total_params 缓冲区，避免污染 state_dict
-        for m in model.modules():
-            for k in ("total_ops", "total_params"):
-                if k in m._buffers:
-                    del m._buffers[k]
-    
+    # 计算 FLOPs (可选，需要 thop)
+    # thop 2.0.20 + Python 3.12 存在兼容性 bug（hooks残留在 Conv1d 上导致训练崩溃）
+    # 因此默认禁用，仅当明确需要时手动调用
+    flops_m = 0
+
     return {
         "total_params": total_params,
         "trainable_params": trainable_params,

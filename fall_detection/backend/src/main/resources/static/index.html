@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>跌倒检测监控台</title>
+    <link rel="stylesheet" href="/app.css?v=20261016-batch1">
+</head>
+<body>
+<header class="topbar">
+    <div>
+        <p class="eyebrow">视频分析 · 实时监测</p>
+        <h1>跌倒检测监控台</h1>
+    </div>
+    <div id="deviceActions" class="top-actions">
+        <span id="cameraStatus" class="status-pill offline">摄像头未启动</span>
+        <button id="startCamera" class="button primary">启动摄像头</button>
+        <button id="stopCamera" class="button">停止摄像头</button>
+    </div>
+</header>
+
+<main class="page">
+    <nav class="mode-tabs" aria-label="检测模式">
+        <button id="deviceTab" class="mode-tab selected" aria-pressed="true">设备实时监测</button>
+        <button id="uploadTab" class="mode-tab" aria-pressed="false">上传视频分析</button>
+    </nav>
+    <div id="deviceMode">
+    <section class="hero-grid">
+        <article class="video-card panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">实时画面</p>
+                    <h2>笔记本内置摄像头</h2>
+                </div>
+                <span id="latency" class="muted">等待推理</span>
+            </div>
+            <div id="videoFrame" class="video-frame">
+                <div class="video-placeholder">启动摄像头后显示实时画面</div>
+                <img id="stream" alt="摄像头实时画面">
+                <div id="alarmOverlay" class="alarm-overlay hidden">检测到疑似跌倒</div>
+            </div>
+            <div class="video-footer">
+                <span>摄像头编号：<strong>laptop_camera</strong></span>
+                <span id="frameInfo">帧号：—</span>
+            </div>
+        </article>
+
+        <article id="alarmPanel" class="alarm-card panel">
+            <p class="eyebrow">当前报警</p>
+            <div class="alarm-state-row">
+                <span id="alarmDot" class="alarm-dot"></span>
+                <h2 id="alarmTitle">当前安全</h2>
+            </div>
+            <p id="alarmDescription" class="muted">模型正在等待摄像头画面。</p>
+            <div id="activeEvent" class="event-detail hidden">
+                <div><span>事件编号</span><strong id="activeEventId">—</strong></div>
+                <div><span>模型分数</span><strong id="activeConfidence">—</strong></div>
+                <div><span>触发时间</span><strong id="activeStartTime">—</strong></div>
+                <div><span>自动解除</span><strong id="activeExpiresAt">—</strong></div>
+                <button id="clearAlarm" class="button danger">人工解除报警</button>
+            </div>
+            <p class="help-text">报警规则：疑似跌倒连续达到 0.5 秒后触发，人工解除或 30 秒后自动解除。</p>
+        </article>
+    </section>
+
+    <section class="stats-grid">
+        <article class="metric panel"><span>近 7 天事件</span><strong id="totalEvents">0</strong></article>
+        <article class="metric panel"><span>当前待处理</span><strong id="activeEvents">0</strong></article>
+        <article class="metric panel"><span>已解除事件</span><strong id="clearedEvents">0</strong></article>
+        <article class="metric panel"><span>最近事件</span><strong id="latestEvent">暂无</strong></article>
+    </section>
+
+    <section class="lower-grid">
+        <article class="panel trend-panel">
+            <div class="panel-heading">
+                <div><p class="eyebrow">事件趋势</p><h2>近 7 天报警数量</h2></div>
+                <span class="muted">按事件创建日期统计</span>
+            </div>
+            <div id="trendChart" class="trend-chart" aria-label="近七天报警数量图表"></div>
+        </article>
+        <article class="panel events-panel">
+            <div class="panel-heading">
+                <div><p class="eyebrow">事件记录</p><h2>最近报警</h2></div>
+                <button id="refresh" class="button small">刷新</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>时间</th><th>摄像头</th><th>模型分数</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody id="eventRows"><tr><td colspan="5" class="empty">还没有报警事件</td></tr></tbody>
+                </table>
+            </div>
+        </article>
+    </section>
+    </div>
+    <section id="uploadMode" class="hidden">
+        <article class="panel upload-panel">
+            <div class="panel-heading">
+                <div><p class="eyebrow">离线视频</p><h2>导入视频，检测疑似跌倒</h2></div>
+                <div class="upload-kind" role="group" aria-label="视频导入模式">
+                    <button id="singleVideoMode" class="button selected" type="button" aria-pressed="true">单视频分析</button>
+                    <button id="batchVideoMode" class="button" type="button" aria-pressed="false">批量导入检测</button>
+                </div>
+            </div>
+            <p class="help-text">支持 MP4、AVI、MOV、MKV、WebM，单个文件不超过 100 MB、5 分钟、1080p。分析在本机进行，同一时间只运行一种检测。</p>
+            <form id="uploadForm" class="upload-form">
+                <label class="file-label" for="videoFile"><span id="fileLabelText">选择视频</span><input id="videoFile" type="file" accept=".mp4,.avi,.mov,.mkv,.webm"></label>
+                <button id="analyzeVideo" class="button primary" type="submit">上传并分析</button>
+                <button id="pauseVideoQueue" class="button hidden" type="button">本条完成后暂停</button>
+            </form>
+            <p id="batchHelp" class="help-text hidden">可一次选择多个视频，也可拖入下方回放窗口。视频按顺序上传、检测，单条失败不影响后续任务。请保持本页面打开，未上传的队列不会在刷新后保留。</p>
+            <p id="uploadMessage" class="muted" role="status">请选择要分析的视频。请先停止设备实时监测。</p>
+            <progress id="videoProgress" max="100" value="0" class="hidden" aria-label="视频分析进度"></progress>
+            <section id="batchQueuePanel" class="batch-queue-panel hidden" aria-label="视频检测队列">
+                <div class="panel-heading"><h3>检测队列</h3><span id="batchSummary" class="muted" role="status"></span></div>
+                <ol id="batchQueue" class="batch-queue"></ol>
+            </section>
+        </article>
+        <div class="upload-grid">
+            <article class="panel upload-panel">
+                <div class="panel-heading"><div><p class="eyebrow">分析回放</p><h2 id="videoTitle">等待上传</h2></div><span id="videoResult" class="status-pill offline">尚未分析</span></div>
+                <div id="videoDropZone" class="video-drop-zone" aria-label="视频拖放区域" aria-describedby="dropHint">
+                    <video id="videoPlayback" class="video-playback hidden" controls playsinline preload="metadata"></video>
+                    <div id="replayPlaceholder" class="replay-placeholder">
+                        <span id="replayStatus">分析完成后，可在这里回放检测画面。</span>
+                        <strong>将视频拖到此处</strong>
+                        <button id="chooseDroppedVideo" class="button" type="button">或选择视频文件</button>
+                    </div>
+                    <div class="drop-overlay" aria-hidden="true">将视频拖到此处<span>松开后加入待检测列表</span></div>
+                </div>
+                <p id="dropHint" class="drop-hint">支持拖入视频；拖入多个文件时自动切换为批量检测。选好后点击“上传并分析”。</p>
+                <div class="video-summary"><span>视频时长 <strong id="videoDuration">—</strong></span><span>疑似跌倒事件 <strong id="videoCount">—</strong></span></div>
+                <p id="videoWarnings" class="video-warnings hidden" role="status"></p>
+                <div id="videoEventList" class="video-event-list"></div>
+                <p class="help-text">观察到倒地变化后，疑似跌倒状态连续 0.5 秒触发；姿态丢失会重新计时。仅有躺卧姿态不代表发生过跌倒。模型分数不等于准确率；回放报警保持 30 秒视频时间，历史分析不触发实时声音报警。</p>
+            </article>
+            <article class="panel upload-panel">
+                <div class="panel-heading history-heading"><div><p class="eyebrow">本机历史</p><h2>最近视频分析</h2></div><button id="clearVideoHistory" class="button button-danger button-small" type="button">清除全部历史</button></div>
+                <div id="videoHistory" class="video-history"><p class="empty">暂无上传记录</p></div>
+            </article>
+        </div>
+    </section>
+</main>
+<div id="toast" class="toast" role="status"></div>
+<script src="/app.js?v=20261016-history1"></script>
+</body>
+</html>

@@ -5,6 +5,11 @@ __pycache__/
 dist/
 build/
 *.egg
+pytest-cache-files-*/
+tmp_pytest_cache*/
+backend/target/
+backend/data/
+app_data/
 
 # ─── Virtual environments ───
 .venv/
@@ -26,28 +31,22 @@ data/__pycache__/
 
 # ─── Inference output / test videos ───
 inference_test/
-outputs/
-eval_report/longtail/videos/
 
 # ─── Model files ───
 *.pt
 *.pth
 *.onnx
-*.onnx.data
 *.om
 *.mindir
 yolov8n-pose.pt
 
-# ─── Videos ───
-*.mp4
-*.avi
-*.mov
-*.mkv
-*.webm
-
 # ─── Large archives (OmniFall 9.72GB) ───
 *.tar
-
+*.tar
+*.zip
+*.7z
+*.pt
+*.pth
 
 # ─── OS ───
 .DS_Store
@@ -58,4 +57,3 @@ Thumbs.db
 
 # ─── Logs ───
 *.log
-*.bundle

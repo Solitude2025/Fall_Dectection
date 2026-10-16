@@ -1,0 +1,224 @@
+[
+  {
+    "video": "Desktop 2026.10.15 - 14.25.43.08.mp4",
+    "interval": 2,
+    "total_frames": 356,
+    "source_fps": 7.058,
+    "processing_seconds": 50.496,
+    "avg_latency_ms": 141.676,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 254,
+        "trigger": 283,
+        "end": 355
+      }
+    ],
+    "yolo_detection_frame_ratio": 0.5,
+    "yolo_positive_detection_frame_ratio": 0.5,
+    "visual_overlay_frame_ratio": 0.9944
+  },
+  {
+    "video": "Desktop 2026.10.15 - 14.28.46.09.mp4",
+    "interval": 2,
+    "total_frames": 374,
+    "source_fps": 12.24,
+    "processing_seconds": 30.618,
+    "avg_latency_ms": 81.697,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 290,
+        "trigger": 319,
+        "end": 373
+      }
+    ],
+    "yolo_detection_frame_ratio": 0.5,
+    "yolo_positive_detection_frame_ratio": 0.2005,
+    "visual_overlay_frame_ratio": 0.3904
+  },
+  {
+    "video": "Desktop 2026.10.15 - 18.58.26.10.mp4",
+    "interval": 2,
+    "total_frames": 398,
+    "source_fps": 10.299,
+    "processing_seconds": 38.698,
+    "avg_latency_ms": 97.101,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 176,
+        "trigger": 205,
+        "end": 397
+      }
+    ],
+    "yolo_detection_frame_ratio": 0.5,
+    "yolo_positive_detection_frame_ratio": 0.5,
+    "visual_overlay_frame_ratio": 1.0
+  },
+  {
+    "video": "Desktop 2026.10.15 - 18.58.49.11.mp4",
+    "interval": 2,
+    "total_frames": 465,
+    "source_fps": 8.583,
+    "processing_seconds": 54.216,
+    "avg_latency_ms": 116.506,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 344,
+        "trigger": 373,
+        "end": 464
+      }
+    ],
+    "yolo_detection_frame_ratio": 0.5011,
+    "yolo_positive_detection_frame_ratio": 0.2473,
+    "visual_overlay_frame_ratio": 0.4925
+  },
+  {
+    "video": "Desktop 2026.10.15 - 20.54.05.17.mp4",
+    "interval": 2,
+    "total_frames": 301,
+    "source_fps": 8.163,
+    "processing_seconds": 36.979,
+    "avg_latency_ms": 122.505,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 130,
+        "trigger": 159,
+        "end": 300
+      }
+    ],
+    "yolo_detection_frame_ratio": 0.5017,
+    "yolo_positive_detection_frame_ratio": 0.5017,
+    "visual_overlay_frame_ratio": 1.0
+  },
+  {
+    "video": "test_016_fallen_to_150.mp4",
+    "interval": 2,
+    "total_frames": 81,
+    "source_fps": 7.16,
+    "processing_seconds": 11.396,
+    "avg_latency_ms": 139.672,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 7,
+        "trigger": 14,
+        "end": 80
+      }
+    ],
+    "yolo_detection_frame_ratio": 0.5062,
+    "yolo_positive_detection_frame_ratio": 0.5062,
+    "visual_overlay_frame_ratio": 1.0
+  },
+  {
+    "video": "Desktop 2026.10.15 - 14.25.43.08.mp4",
+    "interval": 1,
+    "total_frames": 356,
+    "source_fps": 4.495,
+    "processing_seconds": 79.277,
+    "avg_latency_ms": 222.486,
+    "events": 0,
+    "event_frames": [],
+    "yolo_detection_frame_ratio": 1.0,
+    "yolo_positive_detection_frame_ratio": 1.0,
+    "visual_overlay_frame_ratio": 0.9916
+  },
+  {
+    "video": "Desktop 2026.10.15 - 14.28.46.09.mp4",
+    "interval": 1,
+    "total_frames": 374,
+    "source_fps": 6.409,
+    "processing_seconds": 58.419,
+    "avg_latency_ms": 156.029,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 289,
+        "trigger": 318,
+        "end": 373
+      }
+    ],
+    "yolo_detection_frame_ratio": 1.0,
+    "yolo_positive_detection_frame_ratio": 0.4011,
+    "visual_overlay_frame_ratio": 0.3824
+  },
+  {
+    "video": "Desktop 2026.10.15 - 18.58.26.10.mp4",
+    "interval": 1,
+    "total_frames": 398,
+    "source_fps": 5.572,
+    "processing_seconds": 71.474,
+    "avg_latency_ms": 179.458,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 175,
+        "trigger": 204,
+        "end": 397
+      }
+    ],
+    "yolo_detection_frame_ratio": 1.0,
+    "yolo_positive_detection_frame_ratio": 1.0,
+    "visual_overlay_frame_ratio": 1.0
+  },
+  {
+    "video": "Desktop 2026.10.15 - 18.58.49.11.mp4",
+    "interval": 1,
+    "total_frames": 465,
+    "source_fps": 5.093,
+    "processing_seconds": 91.345,
+    "avg_latency_ms": 196.351,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 344,
+        "trigger": 373,
+        "end": 464
+      }
+    ],
+    "yolo_detection_frame_ratio": 1.0,
+    "yolo_positive_detection_frame_ratio": 0.4925,
+    "visual_overlay_frame_ratio": 0.4774
+  },
+  {
+    "video": "Desktop 2026.10.15 - 20.54.05.17.mp4",
+    "interval": 1,
+    "total_frames": 301,
+    "source_fps": 4.923,
+    "processing_seconds": 61.247,
+    "avg_latency_ms": 203.111,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 129,
+        "trigger": 158,
+        "end": 300
+      }
+    ],
+    "yolo_detection_frame_ratio": 1.0,
+    "yolo_positive_detection_frame_ratio": 1.0,
+    "visual_overlay_frame_ratio": 1.0
+  },
+  {
+    "video": "test_016_fallen_to_150.mp4",
+    "interval": 1,
+    "total_frames": 81,
+    "source_fps": 4.117,
+    "processing_seconds": 19.753,
+    "avg_latency_ms": 242.924,
+    "events": 1,
+    "event_frames": [
+      {
+        "start": 7,
+        "trigger": 14,
+        "end": 80
+      }
+    ],
+    "yolo_detection_frame_ratio": 1.0,
+    "yolo_positive_detection_frame_ratio": 1.0,
+    "visual_overlay_frame_ratio": 1.0
+  }
+]

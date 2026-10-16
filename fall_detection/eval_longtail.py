@@ -29,6 +29,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data.augment import IRAugmentation, SpatialAugmentation
+from utils.env_enhance import apply_infrared, apply_blur, apply_far_distance, apply_rain_fog
 
 VIDEO_EXTS = ["*.mp4", "*.avi", "*.mov", "*.mkv", "*.webm"]
 
@@ -48,10 +49,8 @@ def make_lowlight(frame: np.ndarray) -> np.ndarray:
 
 
 def make_ir_style(frame: np.ndarray) -> np.ndarray:
-    """红外风格：灰度 + 对比度 + 传感器噪声"""
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    ir = IRAugmentation.rgb_to_grayscale_ir(rgb, noise_level=0.06, contrast_boost=1.4)
-    return cv2.cvtColor(ir, cv2.COLOR_RGB2BGR)
+    """红外风格：灰度→CLAHE→Gamma→噪声→模糊 （黑白高对比，人体偏亮背景偏暗）"""
+    return apply_infrared(frame)
 
 
 def make_occluded(frame: np.ndarray) -> np.ndarray:
@@ -61,10 +60,28 @@ def make_occluded(frame: np.ndarray) -> np.ndarray:
     )
 
 
+def make_blur(frame: np.ndarray) -> np.ndarray:
+    """运动模糊 + 高斯模糊"""
+    return apply_blur(frame)
+
+
+def make_far(frame: np.ndarray) -> np.ndarray:
+    """远距离：画面缩小嵌入暗背景"""
+    return apply_far_distance(frame)
+
+
+def make_rain_fog(frame: np.ndarray) -> np.ndarray:
+    """雨雾：雨线 + 雾化"""
+    return apply_rain_fog(frame)
+
+
 VARIANTS = {
     "lowlight": make_lowlight,
     "ir_style": make_ir_style,
     "occluded": make_occluded,
+    "blur": make_blur,
+    "far": make_far,
+    "rain_fog": make_rain_fog,
 }
 
 
@@ -122,6 +139,7 @@ def run_scenario(name: str, test_dir: str, checkpoint: str,
         "--test_dir", test_dir,
         "--output", out_dir,
         "--checkpoint", checkpoint,
+        "--version", "large",
     ]
     if extra_args:
         cmd.extend(extra_args)
@@ -242,6 +260,21 @@ def main():
     all_results["occluded"] = run_scenario(
         "occluded", variant_dirs["occluded"], args.checkpoint,
         os.path.join(args.output, "occluded"),
+    )
+    # 模糊
+    all_results["blur"] = run_scenario(
+        "blur", variant_dirs["blur"], args.checkpoint,
+        os.path.join(args.output, "blur"),
+    )
+    # 远距离
+    all_results["far"] = run_scenario(
+        "far", variant_dirs["far"], args.checkpoint,
+        os.path.join(args.output, "far"),
+    )
+    # 雨雾
+    all_results["rain_fog"] = run_scenario(
+        "rain_fog", variant_dirs["rain_fog"], args.checkpoint,
+        os.path.join(args.output, "rain_fog"),
     )
 
     summarize(all_results, args.output)

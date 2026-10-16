@@ -82,7 +82,8 @@ class MotionFeatureEncoder(nn.Module):
     def forward(
         self,
         keypoints: torch.Tensor,   # (B, T, 17, 3)
-        bboxes: torch.Tensor,       # (B, T, 4) 
+        bboxes: torch.Tensor,       # (B, T, 4)
+        step_scales: torch.Tensor = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -94,6 +95,10 @@ class MotionFeatureEncoder(nn.Module):
         """
         B, T = keypoints.shape[0], keypoints.shape[1]
         device = keypoints.device
+        # Live observations can straddle a bounded detector gap. Correct
+        # differences for elapsed time instead of inventing intermediate poses.
+        # Training/offline calls retain their original unit time steps.
+        scale = step_scales if step_scales is not None else torch.ones(B, T, device=device)
         
         features_list = []
         
@@ -123,12 +128,16 @@ class MotionFeatureEncoder(nn.Module):
         # 填充使维度对齐 (B, T)
         vx = torch.cat([vx[:, :1], vx], dim=1)
         vy = torch.cat([vy[:, :1], vy], dim=1)
+        vx = vx * scale
+        vy = vy * scale
         
         # 加速度 (B, T-2)
         ax = vx[:, 2:] - vx[:, 1:-1]
         ay = vy[:, 2:] - vy[:, 1:-1]
         ax = torch.cat([ax[:, :1], ax[:, :1], ax], dim=1)
         ay = torch.cat([ay[:, :1], ay[:, :1], ay], dim=1)
+        ax = ax * scale
+        ay = ay * scale
         
         feature_center = torch.stack([vx, vy, ax, ay], dim=-1)  # (B, T, 4)
         features_list.append(feature_center)
@@ -177,8 +186,8 @@ class MotionFeatureEncoder(nn.Module):
             # 用置信度加权
             conf_weight = kp_data[..., 2].unsqueeze(-1)  # (B, T, 1)
             
-            kp_velocities.append(dvx.unsqueeze(-1))
-            kp_velocities.append(dvy.unsqueeze(-1))
+            kp_velocities.append((dvx * scale).unsqueeze(-1))
+            kp_velocities.append((dvy * scale).unsqueeze(-1))
         
         feature_kp_vel = torch.cat(kp_velocities, dim=-1)  # (B, T, 14)
         features_list.append(feature_kp_vel)
@@ -240,12 +249,12 @@ class MotionFeatureEncoder(nn.Module):
         # 人体框宽度变化率
         bbox_w_change = (bbox_w[:, 1:] - bbox_w[:, :-1]) / (bbox_w[:, :-1] + 1e-6)
         bbox_w_change = torch.cat([bbox_w_change[:, :1], bbox_w_change], dim=1)
-        features_list.append(bbox_w_change.unsqueeze(-1))  # (B, T, 1)
+        features_list.append((bbox_w_change * scale).unsqueeze(-1))  # (B, T, 1)
         
         # 人体框高度变化率
         bbox_h_change = (bbox_h[:, 1:] - bbox_h[:, :-1]) / (bbox_h[:, :-1] + 1e-6)
         bbox_h_change = torch.cat([bbox_h_change[:, :1], bbox_h_change], dim=1)
-        features_list.append(bbox_h_change.unsqueeze(-1))  # (B, T, 1)
+        features_list.append((bbox_h_change * scale).unsqueeze(-1))  # (B, T, 1)
         
         # 中心速度模长
         speed = torch.sqrt(vx**2 + vy**2 + 1e-6)
@@ -258,7 +267,7 @@ class MotionFeatureEncoder(nn.Module):
         # 躯干角度变化率
         torso_angle_change = (torso_angle[:, 1:] - torso_angle[:, :-1])
         torso_angle_change = torch.cat([torso_angle_change[:, :1], torso_angle_change], dim=1)
-        features_list.append(torso_angle_change.unsqueeze(-1))  # (B, T, 1)
+        features_list.append((torso_angle_change * scale).unsqueeze(-1))  # (B, T, 1)
         
         # ---- 10. 手部支撑特征 (6维，利用原 padding 空位) ----
         # 生物力学依据：保护性跌倒（FOOSH）中手通常先于身体落地，
@@ -274,8 +283,8 @@ class MotionFeatureEncoder(nn.Module):
             dvy = w[:, 1:, 1] - w[:, :-1, 1]
             dvx = torch.cat([dvx[:, :1], dvx], dim=1)
             dvy = torch.cat([dvy[:, :1], dvy], dim=1)
-            wrist_vels.append(dvx.unsqueeze(-1))
-            wrist_vels.append(dvy.unsqueeze(-1))
+            wrist_vels.append((dvx * scale).unsqueeze(-1))
+            wrist_vels.append((dvy * scale).unsqueeze(-1))
         features_list.append(torch.cat(wrist_vels, dim=-1))  # (B, T, 4)
         
         # 10b. 手腕贴地度 (1维)：距 bbox 底边的相对位置（取左右手最大值），
@@ -337,6 +346,7 @@ class MotionFeatureEncoder(nn.Module):
         self,
         keypoints_seq: np.ndarray,  # (T, 17, 3)
         bboxes_seq: np.ndarray,      # (T, 4)
+        step_scales: np.ndarray = None,
     ) -> np.ndarray:
         """
         计算序列特征
@@ -352,7 +362,8 @@ class MotionFeatureEncoder(nn.Module):
         bb_t = torch.from_numpy(bboxes_seq).float().unsqueeze(0)  # (1, T, 4)
         
         with torch.no_grad():
-            features = self.forward(kp_t, bb_t)  # (1, T, feature_dim)
+            scales = torch.from_numpy(step_scales).float().unsqueeze(0) if step_scales is not None else None
+            features = self.forward(kp_t, bb_t, step_scales=scales)  # (1, T, feature_dim)
         
         return features.squeeze(0).numpy()
 
