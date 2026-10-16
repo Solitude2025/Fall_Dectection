@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-title Fall Detection - close this window to stop
+title Fall Detection 2
 rem Keep orchestration outside CMD parenthesized blocks (GOTO breaks them).
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0start.ps1" %*
 set "RESULT=%ERRORLEVEL%"

@@ -135,7 +135,7 @@ function Start-Project {
                 Write-Host 'Ready: http://localhost:8080'
                 Write-Host "Logs: $logDirectory"
                 Write-Host 'Keep this CMD window open while using the website.'
-                Write-Host 'Close this window, press Ctrl+C, or run stop.bat to stop all website services.'
+                Write-Host 'Close the window or press Ctrl+C to stop all website services.'
                 if (-not $NoBrowser) { Start-Process 'http://localhost:8080' | Out-Null }
                 while (-not $stopEvent.WaitOne(1000)) {
                     if ($owner -and $owner.HasExited) { break }
