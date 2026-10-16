@@ -1,313 +1,216 @@
-# 轻量级时空语义跌倒检测框架
+# Fall Detection
 
-> **华为专项赛道：面向低算力端侧平台基于视觉的实时跌倒检测**
+轻量级时空语义跌倒检测系统，面向本机视频、摄像头和端侧部署场景。项目将人体姿态、运动特征、时序模型和物理规则结合起来，提供单视频检测、摄像头监测、浏览器监控台、报警事件、视频回放，以及训练、评估和 ONNX 导出工具。
 
-这是一个可在本机体验的跌倒检测研究/演示项目，包含 Python 推理服务、浏览器监控台和可选的 Spring Boot 事件服务。项目输出仅供研究、演示和辅助复核使用，不能替代人工看护、医疗判断或安全关键系统。
+> 本项目是研究与演示系统。检测结果仅用于辅助复核，不能替代人工看护、医疗判断或安全关键系统。
 
-## 公开仓库说明
+## 快速体验
 
-- 仓库不包含 OmniFall 或其他原始视频数据，也不包含摄像头录像；请从数据集官方渠道获取并遵守其许可证、隐私和再分发要求。
-- 仓库不包含 Ultralytics 的 YOLO 姿态权重。首次运行时，Ultralytics 会按模型名下载 `yolov8n-pose.pt`（摄像头）或 `yolo11m-pose.pt`（上传视频）；请在商业使用或再分发前阅读对应条款。
-- `checkpoints/best.pth` 是本项目的时序分类权重，可直接用于演示；若仓库镜像或 GitHub 限制导致它未能下载，请按下文训练步骤重新生成。
-- 数据库密码、摄像头录像、日志和任务结果必须保存在本机。生产环境请通过环境变量设置密码，不要把真实 `.env` 文件提交到 Git。
+### 环境要求
 
-详细的第三方组件和数据说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，环境变量模板见 [.env.example](.env.example)。
+- Windows、Linux 或 macOS
+- Python 3.10 或 3.11、PyTorch 2.0+
+- 仅运行 Python 推理不需要 Java、Maven、MySQL 或 Docker
+- 推荐 NVIDIA GPU；没有 GPU 时可使用 CPU
 
----
-
-## 方案概述
-
-> 应用版接入说明见 [APP_GUIDE.md](APP_GUIDE.md)。当前版本在原有端侧模型外增加了本机摄像头推理服务、Spring Boot + MySQL 事件服务和浏览器监控台。
-
-本方案不采用传统的"YOLOv8n + TCN"直接分类跌倒的方式，而是设计了一个**完整的轻量级时空语义跌倒检测框架**，核心创新围绕三个模块展开：
-
-| 模块 | 作用 | 创新点 |
-|------|------|--------|
-| **Motion Feature Encoder** | 将人体关键点序列编码为 48 维运动语义特征（含 FOOSH 手部支撑先验 6 维） | 替代高维 CNN Feature（640-1024维），TCN 计算量暴跌 |
-| **Light-TCN** | 膨胀因果卷积实现轻量时序建模（32 帧输入 / 63 帧感受野） | 全卷积结构，天然支持 NPU INT8 量化，部署优势远超 GRU |
-| **Rule Refinement** | 物理约束后处理，时空一致性校正 | 几乎零计算量，大幅降低"坐下/弯腰/躺卧"误报 |
-
-### 完整链路
-
-```
-视频输入(RGB/红外)
-    │
-    ▼
-图像预处理(Resize, 亮度自适应 CLAHE/Gamma)
-    │
-    ▼
-YOLOv8n-Pose (人体检测+17关键点)
-    │
-    ▼
-ByteTrack (人体ID连续跟踪)
-    │
-    ▼
-完整性门控 (可见关键点<50%的帧不进入时序缓冲，防半入境误判)
-    │
-    ▼
-Motion Feature Encoder (48维运动特征)
-├── 人体中心速度       ├── 关键点速度
-├── 人体框宽高比       ├── 躯干倾角
-├── 人体面积变化       ├── 重心变化
-└── 手部支撑特征       └── 手腕速度/贴地度/支撑分
-    │
-    ▼
-Light-TCN (32帧时序建模, 63帧感受野)
-    │
-    ▼
-Rule Refinement (规则校正)
-├── 角度持续时间判断   ├── 速度峰值判断
-├── 人体静止持续时间   └── 连续多帧投票
-    │
-    ▼
-报警 / 视频记录 / 日志
-```
-
----
-
-## 实测性能（OmniFall 2000 视频训练，best@epoch18）
-
-### 帧级指标（200 个测试视频，44800+ 帧）
-
-| 指标 | 数值 |
-|------|------|
-| Recall（跌倒召回） | 0.737 |
-| AUC-ROC | 0.819 |
-| F1 | 0.627 |
-| FPR | 0.255 |
-
-### 事件级（真实视频，UR Fall + 自测）
-
-| 场景 | 结果 |
-|------|------|
-| RGB 正常光（2 跌倒 + 2 ADL） | **4/4**：跌倒全检出，ADL 零误报 |
-| **UR Fall 全量 20 段（10 跌倒 + 10 ADL）** | **跌倒检出 10/10（100%），ADL 8/10 无误报**（adl-04/05 躺卧类边缘误报 0.37–0.40），平均延迟 ~15ms |
-| 微光（自动低光增强） | 4/4 |
-| 遮挡（Random Erasing） | 4/4 |
-| 老人缓慢坐地（非跌倒） | 正确不报警 |
-| 红外风格（风格迁移模拟） | 事件级 0/2，**已知边界**（模型有响应 raw 0.51，规则门保守拦截，需真实红外数据标定） |
-
-## 赛题合规
-
-| 指标 | 限制 | 本方案 | 状态 |
-|------|------|--------|------|
-| 模型总参数 | ≤ 20M | 67,329 (TCN，不含 YOLO 3.3M) | ✓ |
-| FP32 大小 | ≤ 80MB | 0.26MB | ✓ |
-| 端侧推理延迟 | ≤ 100ms | CPU 实测 13-35ms/帧 | ✓ |
-| 纯视觉方案 | 是 | ✓ | ✓ |
-| 可见光+红外 | 支持 | IR 预处理+增强+评测体系（事件级检出为已知边界） | ⚠ |
-| NPU 内存 | ≤ 20MB | 0.26MB（INT8 后 ~0.07MB） | ✓ |
-| 相机输入 | 1080P+ | ✓（内部降采样 640×384） | ✓ |
-
----
-
-## 项目结构
-
-```
-fall_detection/
-├── models/                     # 核心模型
-│   ├── motion_encoder.py       # 运动特征编码器（48维，含手部支撑特征）
-│   ├── light_tcn.py            # 轻量时序卷积网络
-│   ├── rule_refinement.py      # 时空一致性规则校正
-│   ├── transformer_tcn.py      # 备选 Transformer-TCN（large 版）
-│   └── fall_detector.py        # 完整跌倒检测模型
-├── pipeline/                   # 推理管线
-│   ├── detector.py             # YOLOv8n-Pose 封装（IR/低光自适应预处理）
-│   ├── tracker.py              # ByteTrack 封装（IoU 匹配已修复标定）
-│   └── inference.py            # 完整推理管线（完整性门控+概率平滑）
-├── data/                       # 数据处理
-│   ├── augment.py              # 长尾增强体系（截断/整帧丢失/IR退化/红外风格化等）
-│   └── dataset.py              # 数据集加载器（难负样本加权采样）
-├── utils/                      # 工具（评估指标、可视化）
-├── configs/config.yaml         # 全部阈值配置
-├── prepare_data.py             # 数据准备（下载→AV1解码→提关键点→分层抽样→分流）
-├── train.py                    # 训练
-├── evaluate.py                 # 评估报告（训练曲线/混淆矩阵）
-├── tune_threshold.py           # 验证集阈值调优
-├── eval_longtail.py            # 长尾场景评测（微光/红外/遮挡变体对比）
-├── infer.py                    # 推理（批量/单视频/摄像头，输出标注视频）
-├── export.py                   # 模型导出 ONNX/TorchScript
-├── checkpoints/                # 模型权重（best.pth 为封版）
-├── outputs/                    # 推理标注视频
-├── eval_report/                # 评估图表与长尾对比表
-├── export/                     # 导出产物
-└── logs/                       # 运行日志
-```
-
----
-
-## 快速开始
-
-### 1. 安装依赖
+### 安装
 
 ```bash
+git clone https://github.com/Solitude2025/Fall_Dectection.git
+cd Fall_Dectection/fall_detection
+python -m venv .venv
+```
+
+Windows PowerShell：
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Linux/macOS：
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-# 国内加速：pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 ```
 
-Python 3.10 或 3.11、JDK 17 和 Maven 3.9+ 是推荐环境。仅运行 Python 推理不需要 Java、MySQL 或 Docker；要体验完整网页应用，再安装后端依赖并按 [APP_GUIDE.md](APP_GUIDE.md) 启动。
+项目包含时序分类权重 `checkpoints/best.pth`。首次运行时，Ultralytics 会自动下载 `yolov8n-pose.pt`（摄像头）或 `yolo11m-pose.pt`（上传视频）。第三方权重许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-### 2. 直接运行一个本地视频
-
-将你有权处理的视频放入本地 `test/`（该目录默认被 Git 忽略），并运行：
+### 单视频检测
 
 ```bash
-python infer.py --video path/to/your_video.mp4 --checkpoint checkpoints/best.pth
+python infer.py --video path/to/video.mp4 --checkpoint checkpoints/best.pth
 ```
 
-首次运行会自动下载所需的 YOLO pose 权重。没有 NVIDIA GPU 时，把配置中的 `video_device` / `camera_device` 设为 `cpu`，或让代码自动回退到 CPU。
-
-### 3. 数据准备（OmniFall）
+结果默认写入 `outputs/`。批量检测本地 `test/` 目录：
 
 ```bash
-# 完整流程：下载 -> 提取关键点 -> 80/10/10 分流
-# 注意：OmniFall 视频为 AV1 编码，脚本内置 imageio-ffmpeg 回退解码
-# 默认分层抽样 500 个视频（10 类动作配额，覆盖多视角），-1 为全部 12000 个
-python prepare_data.py --all --max_videos 2000
-
-# 分步执行
-python prepare_data.py --download              # 只下载
-python prepare_data.py --extract --max_videos 2000   # 只提取关键点
-python prepare_data.py --split                 # 只分流
-```
-
-### 4. 训练
-
-```bash
-python train.py --data_dir data/train --val_dir data/val --epochs 50 --batch_size 32 --device cpu
-
-# 训练后在验证集上调优阈值
-python tune_threshold.py --checkpoint checkpoints/best.pth
-
-# 生成评估图表
-python evaluate.py --checkpoint checkpoints/best.pth
-```
-
-### 5. 推理测试
-
-```bash
-# test/ 目录批量推理（保存标注视频 + 事件 JSON 到 outputs/）
 python infer.py --test --checkpoint checkpoints/best.pth
+```
 
-# 单视频
-python infer.py --video your_video.mp4 --checkpoint checkpoints/best.pth
+红外/低光模式：
 
-# 红外模式 / 关闭自动低光增强
-python infer.py --test --ir --checkpoint checkpoints/best.pth
-python infer.py --test --no_lowlight --checkpoint checkpoints/best.pth
+```bash
+python infer.py --video path/to/video.mp4 --ir --checkpoint checkpoints/best.pth
+python infer.py --video path/to/video.mp4 --no_lowlight --checkpoint checkpoints/best.pth
+```
 
-# 摄像头实时
+摄像头实时检测：
+
+```bash
 python infer.py --webcam --checkpoint checkpoints/best.pth
 ```
 
-### 6. 长尾场景评测
+没有 CUDA 时可使用 `--device cpu`。模型、阈值、检测间隔和摄像头参数位于 `configs/config.yaml`。
 
-```bash
-# 对 test/ 视频生成微光/红外/遮挡变体并逐场景对比
-python eval_longtail.py --checkpoint checkpoints/best.pth
-# 结果：eval_report/longtail/longtail_summary.{md,json}
+## 完整网页应用
+
+```text
+浏览器监控台 :8080
+        │
+        ▼
+Spring Boot 业务服务 :8080 ─── MySQL 或 H2
+        │
+        ▼
+Python 推理服务 :8001 ─── 摄像头 / 视频文件
 ```
 
-### 7. NPU 部署导出
+安装 Python、JDK 17 和 Maven 后，在项目根目录运行：
+
+```powershell
+.\start.bat
+```
+
+浏览器打开 <http://localhost:8080>。停止服务：
+
+```powershell
+.\stop.ps1
+```
+
+没有 MySQL 时可手动使用 H2：
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "h2"
+cd backend
+mvn spring-boot:run
+```
+
+页面支持摄像头监测、报警确认、事件查询、视频上传和标注回放；上传视频限制为 100 MB、5 分钟和 1080p。更多说明见 [APP_GUIDE.md](APP_GUIDE.md) 与 [backend/README.md](backend/README.md)。
+
+使用 MySQL 时不要把真实密码写入 Git：
+
+```powershell
+Copy-Item .env.example .env
+docker compose up -d mysql
+```
+
+也可以设置 `MYSQL_HOST`、`MYSQL_PORT`、`MYSQL_DATABASE`、`MYSQL_USER`、`MYSQL_PASSWORD` 和 `MYSQL_ROOT_PASSWORD`。
+
+## 算法流程
+
+```text
+视频帧 → Resize/低光增强/红外预处理
+       → YOLO Pose（人体框 + 17 个关键点）
+       → ByteTrack 跨帧跟踪
+       → 关键点完整性门控
+       → Motion Feature Encoder（48 维）
+       → Light-TCN（32 帧时序建模）
+       → Rule Refinement（角度、速度、静止、多帧投票）
+       → 跌倒事件、标注视频和报警记录
+```
+
+核心设计包括运动学特征压缩、膨胀因果卷积、关键点完整性门控、物理规则校正，以及低光、遮挡和视角变化增强。
+
+## 项目结构
+
+```text
+fall_detection/
+├── models/                  # Motion Encoder、Light-TCN、规则校正和完整模型
+├── pipeline/                # 检测、跟踪和推理流程
+├── services/                # Python 推理、视频分析和摄像头服务
+├── backend/                 # Spring Boot 事件服务和网页静态资源
+├── data/                    # 数据集加载与增强代码
+├── configs/config.yaml      # 模型、检测器、报警和部署配置
+├── checkpoints/best.pth    # 本项目时序分类权重
+├── tests/                   # Python 单元测试
+├── scripts/                 # 回归、摄像头和服务测试脚本
+├── prepare_data.py          # 数据准备
+├── train.py                 # 训练
+├── evaluate.py              # 评估与报告
+├── infer.py                 # 视频/摄像头推理入口
+├── export.py                # ONNX/TorchScript 导出
+├── APP_GUIDE.md             # 网页应用详细说明
+└── THIRD_PARTY_NOTICES.md   # 第三方模型与数据集说明
+```
+
+视频、原始数据、日志、数据库、缓存和推理输出默认被 `.gitignore` 忽略。请只使用你有权处理的素材。
+
+## 训练与评估
+
+OmniFall 不随仓库分发。请从官方来源下载并遵守其许可证：
+
+```bash
+python prepare_data.py --all --max_videos 2000
+python train.py --data_dir data/train --val_dir data/val --epochs 50 --batch_size 32 --device cpu
+python tune_threshold.py --checkpoint checkpoints/best.pth
+python evaluate.py --checkpoint checkpoints/best.pth
+python eval_longtail.py --checkpoint checkpoints/best.pth
+```
+
+导出部署模型：
 
 ```bash
 python export.py --checkpoint checkpoints/best.pth --format onnx
-
-# 华为 Ascend NPU 部署
-atc --model=fall_detector_standard.onnx \
-    --framework=5 \
-    --output=fall_detector \
-    --soc_version=Ascend310 \
-    --input_shape="motion_features:1,32,48" \
-    --input_format=ND
 ```
 
----
+华为 Ascend 部署还需要对应 CANN/ATC 工具链，并根据目标芯片重新校验输入尺寸、算子支持和量化结果。
 
-## 三大痛点针对性优化
+## 参考结果
 
-### 痛点 1：动作语义混淆
+以下结果来自当前版本内部评测，不代表所有视频或真实养老场景的保证：
 
-**问题**：快速坐下、弯腰、躺下与跌倒视觉表征相似，YOLO 直接分类误报频发。
+| 评测 | 结果 |
+|---|---:|
+| OmniFall 帧级 Recall | 0.737 |
+| OmniFall 帧级 AUC-ROC | 0.819 |
+| OmniFall 帧级 F1 | 0.627 |
+| UR Fall 跌倒视频检出 | 10/10 |
+| UR Fall ADL 无误报 | 8/10 |
+| TCN 参数量 | 67,329 |
+| TCN FP32 大小 | 约 0.26 MB |
 
-**解决方案**：
-- **Motion Feature Encoder**：不做 RGB → 跌倒，而是提取人体运动学特征
-- **手部支撑先验（FOOSH）**：保护性跌倒中手先于身体落地并保持支撑，
-  提取手腕速度/贴地度/支撑分作为软特征供 TCN 学习时序先后关系
-- **难负样本加权**：躯干角变化大的负样本（坐下/躺下）采样权重最高 4 倍
-- **Rule Refinement**：躯干角度持续判定 + 速度峰值检查 + 多帧投票
+测试集规模、视频来源和阈值会显著影响结果，请在自己的摄像头、视角、光照和人群上建立独立测试集。
 
-### 痛点 2：端侧算力瓶颈
+## 已知限制
 
-**问题**：3D-CNN / Video Transformer 推理延迟高，无法满足实时性。
+- 开头已经处于躺卧状态、人体很小、快速遮挡或镜头剧烈移动时可能漏检。
+- 深蹲、弯腰、快速坐下、主动躺下等动作可能与跌倒相似，仍可能误报。
+- 模拟红外风格的事件级效果有限，真实红外摄像头需要重新标定和评估。
+- 当前网页应用面向单机单摄像头，没有用户登录、多设备管理和生产级权限控制。
+- YOLO11m-Pose 上传视频配置约 2,091 万参数，超过原比赛 2,000 万参数限制；参赛时应改用符合约束的模型并重新验证。
+- 该系统不能保证检测到所有跌倒，也不能单独作为紧急救援依据。
 
-**解决方案**：
-- **Motion Feature Encoder**：将 640-1024 维 CNN Feature 压缩到 48 维
-- **Light-TCN**：67K 参数、2.2 MFLOPs，全卷积结构，天然支持 NPU INT8 量化
-- **隔帧检测优化**：YOLO 隔 2 帧运行，TCN 每帧运行
-- **分辨率自适应**：1080P → 640×384 推理
+## 隐私与安全
 
-### 痛点 3：长尾场景泛化差
+- 不要提交摄像头录像、包含人脸或个人信息的视频、生产数据库、日志、真实密码或 API 密钥。
+- 使用 `.env.example` 创建本地配置，不要提交 `.env`。
+- 对外部署前请增加鉴权、HTTPS、访问控制、数据保留期限和审计日志。
+- 数据集、预训练权重和依赖库各自适用其许可证；详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-**问题**：低光/红外/遮挡/半入境/视角变化场景下精度下降。
+## 测试
 
-**解决方案**：
-- **关键点级架构**：TCN 不接触像素，光照/红外天然不影响分类器
-- **训练增强体系**：半入境截断、burst 整帧检测丢失、IR 结构化退化、
-  红外风格迁移、Random Erasing、透视/运动模糊
-- **推理自适应**：亮度 <60 自动 gamma+CLAHE（亮帧零开销）；
-  关键点完整性门控（可见关键点 <50% 的帧不进入时序缓冲，防半入境误判）
-- **多视角数据**：训练集按相机俯仰角/方位角/距离分层抽样
-
----
-
-## 数据准备
-
-### 参考数据集
-
-- [OmniFall (HuggingFace)](https://huggingface.co/datasets/simplexsigil2/omnifall)
-  ——本项目训练集来源（合成子集，label 1=fall / 2=fallen 视为正样本）
-- [UR Fall Detection Dataset](http://fenix.ur.edu.pl/~mkepski/ds/ds.html)
-  ——`test/` 内 4 段真实测试视频来源
-
-### 数据格式
-
-```
-data/
-├── train/
-│   ├── 0000/
-│   │   └── person_0/
-│   │       ├── keypoints.npy    # (T, 17, 3) 归一化关键点 [x, y, conf]
-│   │       ├── bboxes.npy       # (T, 4)     归一化边界框
-│   │       └── labels.npy       # (T,)       帧级标签 0/1
-│   └── ...
-├── val/
-└── test/
+```bash
+python -m pytest tests -q
 ```
 
----
+## 许可证
 
-## 模型配置
+项目源代码采用 [MIT License](LICENSE)。第三方数据集、预训练模型和依赖库不自动继承本项目许可证。
 
-### Standard (推荐，当前封版)
-- Motion Feature: 48 维
-- TCN: 5层, hidden=64, dilations=[1,2,4,8,16]
-- 参数: 67,329
+## 致谢
 
-### Light (极致轻量)
-- TCN: 4层, hidden=32, depthwise separable
-- 参数: ~20K
-
-### Large (高精度，Transformer-TCN)
-- Motion Feature: 64 维
-- 参数: ~200K
-
----
-
-## 参考文献
-
-1. LFD-YOLO: a lightweight fall detection network with enhanced feature extraction and fusion
-2. BMR-YOLO: A deep learning approach for fall detection in complex environments
-3. YOLO-fall: a YOLO-based fall detection model with high precision, shrunk size, and low latency
-4. ByteTrack: Multi-Object Tracking by Associating Every Detection Box
-5. Temporal Convolutional Networks: A Unified Approach to Action Segmentation
+感谢 OmniFall、UR Fall、Ultralytics、PyTorch、OpenCV、ByteTrack、FastAPI 和 Spring Boot 社区提供的工具、数据或研究基础。
